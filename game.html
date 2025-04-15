@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cute Snake Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fdf6e3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+
+    h1 {
+      color: #fd79a8;
+      margin-top: 40px;
+      font-size: 3rem;
+      text-shadow: 2px 2px #fab1a0;
+    }
+
+    canvas {
+      background: #ffeaa7;
+      border: 5px dashed #fd79a8;
+      box-shadow: 0 0 20px #fd79a8;
+      margin-top: 20px;
+    }
+
+    .buttons {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      background: #fab1a0;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #ff7675;
+    }
+
+    #game-over {
+      color: #d63031;
+      font-size: 2rem;
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Have Fun! 🎉</h1>
+
+  <canvas id="game" width="400" height="400"></canvas>
+  <div class="buttons">
+    <button id="start-btn">Start</button>
+    <button id="restart-btn" style="display: none;">Restart</button>
+  </div>
+  <div id="game-over">💀 Game Over! 💀</div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const box = 20;
+    const rows = canvas.height / box;
+    const cols = canvas.width / box;
+
+    let snake, direction, food, gameInterval, gameOver = false;
+
+    function initGame() {
+      snake = [{ x: box * 5, y: box * 5 }];
+      direction = 'RIGHT';
+      food = spawnFood();
+      gameOver = false;
+      document.getElementById('game-over').style.display = 'none';
+      document.getElementById('restart-btn').style.display = 'none';
+    }
+
+    function spawnFood() {
+      return {
+        x: Math.floor(Math.random() * cols) * box,
+        y: Math.floor(Math.random() * rows) * box
+      };
+    }
+
+    function draw() {
+      if (gameOver) return;
+
+      ctx.fillStyle = '#ffeaa7';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw food
+      ctx.fillStyle = '#e17055';
+      ctx.beginPath();
+      ctx.arc(food.x + box / 2, food.y + box / 2, box / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Draw snake
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? '#55efc4' : '#81ecec';
+        ctx.beginPath();
+        ctx.arc(snake[i].x + box / 2, snake[i].y + box / 2, box / 2 - 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const head = { ...snake[0] };
+      if (direction === 'LEFT') head.x -= box;
+      if (direction === 'UP') head.y -= box;
+      if (direction === 'RIGHT') head.x += box;
+      if (direction === 'DOWN') head.y += box;
+
+      // Collision checks
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        snake.some(segment => segment.x === head.x && segment.y === head.y)
+      ) {
+        endGame();
+        return;
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        food = spawnFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      gameOver = true;
+      document.getElementById('game-over').style.display = 'block';
+      document.getElementById('restart-btn').style.display = 'inline-block';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+      if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+      if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+      if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+    });
+
+    document.getElementById('start-btn').addEventListener('click', () => {
+      initGame();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(draw, 200);
+      document.getElementById('start-btn').style.display = 'none';
+    });
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      initGame();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(draw, 200);
+    });
+  </script>
+</body>
+</html>
